@@ -1,0 +1,127 @@
+function outSummary = computeRaceSummary(xPos, yPos, tVec, track)
+%========================================================
+%
+% Usage: summary = computeRaceSummary(xPos, yPos, tVec, track)
+%
+% Inputs:   xPos, yPos are the simulated vehicle position coordinates.
+%           tVec is the time vector aligned with xPos and yPos.
+%           track is a struct containing:
+%                 - width  : half-width boundary used for track limits
+%                 - l_st   : straight section length
+%                 - radius : radius of the curved portion
+%
+% Output: outSummary is a struct with fields:
+%   loops     - number of completed laps (start line crossings)
+%   tloops    - times when the start line was crossed
+%   leftTrack - struct storing x/y/time values whenever the car leaves track
+%
+%========================================================
+
+lastRegion = 6;
+lapCount = 0;
+
+crossTimes = zeros(1, 1000); % Preallocate assuming an upper bound of 1000 laps
+crossIdx = 0;
+
+offIdx = 0;
+xOff = [];
+yOff = [];
+tOff = [];
+
+for idx = 1:length(xPos)
+
+    % Determine which geometric segment the point falls into
+    if xPos(idx) < track.l_st
+        if xPos(idx) >= 0
+            if yPos(idx) < track.radius
+                region = 1;
+            else
+                region = 4;
+            end
+        else
+            if yPos(idx) < track.radius
+                region = 6;
+            else
+                region = 5;
+            end
+        end
+    else
+        if yPos(idx) < track.radius
+            region = 2;
+        else
+            region = 3;
+        end
+    end
+
+    % Count a lap whenever we transition from region 6 to region 1
+    if ((lastRegion == 6) && (region == 1))
+        lapCount = lapCount + 1;
+        crossIdx = crossIdx + 1;
+        crossTimes(crossIdx) = tVec(idx);
+    end
+
+    lastRegion = region;
+
+    % Save points that violate the track boundary
+    if ~isOnTrack(xPos(idx), yPos(idx), region, track)
+        offIdx = offIdx + 1;
+        xOff(offIdx) = xPos(idx);
+        yOff(offIdx) = yPos(idx);
+        tOff(offIdx) = tVec(idx);
+    end
+end
+
+% Keep only recorded crossing times (remove unused preallocated zeros)
+crossTimes = crossTimes(crossTimes ~= 0);
+
+outSummary.loops = lapCount;
+outSummary.tloops = crossTimes;
+outSummary.leftTrack.X = xOff;
+outSummary.leftTrack.Y = yOff;
+outSummary.leftTrack.t = tOff;
+
+end
+
+
+function flag = isOnTrack(x, y, region, track)
+% Returns 1 if the point is within track bounds for the given region, else 0.
+
+switch region
+    case 1
+        if ((y < (0.0 + track.width)) && (y > (0.0 - track.width)))
+            flag = 1;
+        else
+            flag = 0;
+        end
+
+    case {2, 3}
+        r = sqrt((x - track.l_st)^2 + (y - track.radius)^2);
+        if ((r < track.radius + track.width) && ...
+                (r > track.radius - track.width))
+            flag = 1;
+        else
+            flag = 0;
+        end
+
+    case 4
+        if ((y < (2 * track.radius + track.width)) && ...
+                (y > (2 * track.radius - track.width)))
+            flag = 1;
+        else
+            flag = 0;
+        end
+
+    case {5, 6}
+        r = sqrt((x - 0.0)^2 + (y - track.radius)^2);
+        if ((r < track.radius + track.width) && ...
+                (r > track.radius - track.width))
+            flag = 1;
+        else
+            flag = 0;
+        end
+
+    otherwise
+        print("error");
+end
+
+end
