@@ -1,0 +1,68 @@
+%%% PROJECT 2 CONFIGURATION %%%
+% This script defines the constants and initial setup used in Project 2.
+% Some parameters are also relevant for Project 3 and are included
+% (commented out) near the end of the file.
+
+% -----------------------------
+% Vehicle Physical Properties
+% -----------------------------
+vehicleParams.Iz = 1600;    % kg·m^2  - Yaw moment of inertia
+vehicleParams.m  = 1000;    % kg      - Total vehicle mass
+
+
+% -----------------------------
+% Initial State Conditions
+% -----------------------------
+vehicleParams.init.x_init     = 0;      % m     - Starting X position
+vehicleParams.init.y_init     = 0;      % m     - Starting Y position
+vehicleParams.init.vx_init    = 0.1;    % m/s   - Initial longitudinal velocity
+vehicleParams.init.vy_init    = 0;      % m/s   - Initial lateral velocity
+vehicleParams.init.yawRate0  = 0;      % rad/s - Initial yaw rate
+vehicleParams.init.heading0  = 0;      % rad   - Initial vehicle heading angle
+
+
+% -----------------------------
+% Tire and Geometry Parameters
+% -----------------------------
+vehicleParams.cornerStiff_f = 40000;    % N/rad - Front tire cornering stiffness
+vehicleParams.cornerStiff_r = 40000;    % N/rad - Rear tire cornering stiffness
+vehicleParams.Fy_f_max = 40000 * 1/180 * pi; % N - Peak front lateral tire force
+vehicleParams.Fy_r_max = 40000 * 1/180 * pi; % N - Peak rear lateral tire force
+vehicleParams.dist_rear  = 1.5;         % m - CG to rear axle distance
+vehicleParams.dist_front = 1.0;         % m - CG to front axle distance
+vehicleParams.tireRadius = 0.3;         % m - Wheel radius
+
+
+% -----------------------------
+% Track and Handling Properties
+% -----------------------------
+curveRadius = 200; % m - Radius of the track curvature
+
+vehicleParams.Kus = ... % Vehicle understeer gradient
+    vehicleParams.m / ...
+    ((vehicleParams.dist_rear + vehicleParams.dist_front) * curveRadius) * ...
+    (vehicleParams.dist_rear / vehicleParams.cornerStiff_f - ...
+     vehicleParams.dist_front / vehicleParams.cornerStiff_r);
+
+
+vehicleParams.alpha_limit = 4 / 180 * pi; % rad - Maximum allowable slip angle
+
+
+% -----------------------------
+% Velocity Targets
+% -----------------------------
+vehicleParams.vx_target = 200.0;     % m/s - Desired longitudinal speed
+vehicleParams.vx_min    = 0.1;       % m/s - Minimum velocity threshold
+
+
+
+%%% PROJECT 3 ADDITIONAL PARAMETERS %%%
+% Longitudinal Dynamics Coefficients
+% vehicleParams.C0 = 0.0041;        % N        - Static rolling resistance
+% vehicleParams.C1 = 0.000066;      % N/(m/s)  - Speed-dependent rolling resistance
+
+% Aerodynamic Drag Calculation Inputs
+% airDensity = 1.225;   % kg/m^3 - Air density
+% frontalArea = 2.32;   % m^2    - Vehicle frontal area
+% dragCoeff = 0.36;     % –      - Aerodynamic drag coefficient
+% vehicleParams.C2 = 0.5 * airDensity * frontalArea * dragCoeff; % N/(m/s)^2
